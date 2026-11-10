@@ -20,6 +20,7 @@ public class ChessbotApplication extends Application {
     }
 
     public static void main(String[] args) {
+        System.setProperty("prism.lcdtext", "false"); // Fixes text artifacts
         launch(args);
     }
 }

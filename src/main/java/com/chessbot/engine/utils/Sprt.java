@@ -7,7 +7,7 @@ package com.chessbot.engine.utils;
 // When H0 is proven, it means that SPRT is confident that H1 is false, not that it's confident that the elo difference
 // equals exactly the given value, the reverse is true if H1 is proven
 public class Sprt {
-    // The results are from the perspective of the new version bot
+    // The results are from the perspective of the initially white bot
     private int wins = 0, draws = 0, losses = 0;
 
     // LLR (Log Likelihood Ratio) is the logarithmic score of how many times more likely is that H1 is true, instead of

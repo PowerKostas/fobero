@@ -3,5 +3,5 @@
 <?import javafx.scene.layout.*?>
 
 
-<HBox fx:id="mainContainer" spacing="20" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.chessbot.ui.controllers.MainController">
+<HBox fx:id="mainContainer" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.chessbot.ui.controllers.MainController">
 </HBox>

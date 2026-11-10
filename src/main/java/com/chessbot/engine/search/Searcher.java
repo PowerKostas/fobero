@@ -28,8 +28,11 @@ public class Searcher {
     // Boolean to apply experimental features only to specific bot versions
     private final boolean experimentalVersion;
 
-    // Only used to test performance
-    //private int nodesSearched;
+    private int nodesSearched;
+
+    private boolean isHardTimeLimitExpired;
+
+    private long hardTimeLimitEndTime;
 
 
     public Searcher(Board board, TranspositionTable tt, boolean experimentalVersion) {
@@ -114,16 +117,29 @@ public class Searcher {
     // moves in this position, moveList.moves[0] would return a null, if it's the first move of the game, or a random illegal
     // move, anywhere else. But this isn't a problem because the end of the game is already handled by whichever class originally
     // called this function
-    public int searchRoot(int targetDepth) {
-        //nodesSearched = 0;
-        //nodesSearched += 1;
-
-        long zobristKey = board.getCurrentZobristKey();
+    public int searchRoot(int maxDepth, int timeLeft, int incrementTime) {
         MoveList moveList = moveListPool[0];
         MoveGenerator.generate(board, moveList);
+
+        // If there is only 1 legal move, return it immediately
+        if (moveList.count == 1) {
+            return moveList.moves[0];
+        }
+
+        nodesSearched = 1;
+        isHardTimeLimitExpired = false;
+
+        long softTimeLimit = TimeManager.calculateSoftTimeLimit(timeLeft, incrementTime);
+        long hardTimeLimit = TimeManager.calculateHardTimeLimit(timeLeft, softTimeLimit);
+
+        long startTime = System.nanoTime();
+        long softEndTime = startTime + (softTimeLimit * 1_000_000L);
+        hardTimeLimitEndTime = startTime + (hardTimeLimit * 1_000_000L);
+
+        long zobristKey = board.getCurrentZobristKey();
         int bestMove = moveList.moves[0];
 
-        for (int currentDepth = 1; currentDepth <= targetDepth; currentDepth += 1) {
+        for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth += 1) {
             MoveOrderer.prepareMoveScores(board, moveList, Move.getMoveWithoutScore(bestMove), null, 0);
 
             int alpha = -Constants.INFINITY_SCORE;
@@ -146,12 +162,16 @@ public class Searcher {
                 else {
                     evaluation = -search(currentDepth - 1, 1, -alpha - 1, -alpha);
 
-                    if (evaluation > alpha) {
+                    if (evaluation > alpha && !isHardTimeLimitExpired) {
                         evaluation = -search(currentDepth - 1, 1, -beta, -alpha);
                     }
                 }
 
                 board.unmakeMove(move, undo);
+
+                if (isHardTimeLimitExpired) {
+                    break;
+                }
 
                 if (evaluation > bestEvaluation) {
                     alpha = evaluation;
@@ -160,10 +180,26 @@ public class Searcher {
                 }
             }
 
+            if (isHardTimeLimitExpired) {
+                break;
+            }
+
             tt.store(zobristKey, 0, Move.getMoveWithoutScore(bestMove), currentDepth, TranspositionTable.EXACT_BOUND, bestEvaluation);
 
             // String pvString = buildPrincipalVariationString(currentDepth);
             // System.out.printf("Current Depth: %d | Evaluation: %d | Principal Variation: %s%n%n", currentDepth, bestEvaluation, pvString);
+
+            // If a checkmate is found, search() returns -Constants.CHECKMATE_EVALUATION + pliesFromRoot. From the root's
+            // perspective, the number of plies to mate can be extracted with Constants.CHECKMATE_EVALUATION - Math.abs(bestEvaluation).
+            // If it has already searched deep enough to prove no shorter mate exists, stop the search
+            int pliesToMate = Constants.CHECKMATE_EVALUATION - Math.abs(bestEvaluation);
+            if (pliesToMate <= currentDepth) {
+                break;
+            }
+
+            if (System.nanoTime() >= softEndTime) {
+                break;
+            }
         }
 
         // System.out.printf("Nodes Searched: %d%n", nodesSearched);
@@ -173,9 +209,13 @@ public class Searcher {
 
     // Recursive function for every depth below the root, returns an evaluation
     private int search(int depth, int pliesFromRoot, int alpha, int beta) {
-        //nodesSearched += 1;
+        nodesSearched += 1;
 
-        // Draw and repetition detection, return an evaluation of 0
+        if ((nodesSearched & 2047) == 0 && System.nanoTime() >= hardTimeLimitEndTime) {
+            isHardTimeLimitExpired = true;
+            return 0;
+        }
+
         if (ResultDetector.isFiftyMoveRule(board) || ResultDetector.isInsufficientMaterial(board) || ResultDetector.isRepetition(board)) {
             return 0;
         }
@@ -228,12 +268,16 @@ public class Searcher {
             else {
                 evaluation = -search(depth - 1, pliesFromRoot + 1, -alpha - 1, -alpha);
 
-                if (evaluation > alpha && evaluation < beta) {
+                if (evaluation > alpha && evaluation < beta && !isHardTimeLimitExpired) {
                     evaluation = -search(depth - 1, pliesFromRoot + 1, -beta, -alpha);
                 }
             }
 
             board.unmakeMove(move, undo);
+
+            if (isHardTimeLimitExpired) {
+                return 0;
+            }
 
             if (evaluation > bestEvaluation) {
                 bestEvaluation = evaluation;
@@ -265,7 +309,12 @@ public class Searcher {
     // Since quiescence search has no depth limit, only pliesFromRoot is needed. Because, when not in check, QS only searches
     // captures and queen promotions, it doesn't store entries in the transposition table
     private int quiescenceSearch(int pliesFromRoot, int alpha, int beta) {
-        //nodesSearched += 1;
+        nodesSearched += 1;
+
+        if ((nodesSearched & 2047) == 0 && System.nanoTime() >= hardTimeLimitEndTime) {
+            isHardTimeLimitExpired = true;
+            return 0;
+        }
 
         if (ResultDetector.isFiftyMoveRule(board) || ResultDetector.isInsufficientMaterial(board) || ResultDetector.isRepetition(board)) {
             return 0;
@@ -394,6 +443,10 @@ public class Searcher {
             int undo = board.makeMove(move);
             int evaluation = -quiescenceSearch(pliesFromRoot + 1, -beta, -alpha);
             board.unmakeMove(move, undo);
+
+            if (isHardTimeLimitExpired) {
+                return 0;
+            }
 
             if (evaluation > bestEvaluation) {
                 bestEvaluation = evaluation;

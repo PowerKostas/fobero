@@ -21,12 +21,21 @@ public final class Constants {
     // Move ordering score, must be higher than MVV-LVA + Promotions + ...
     public static final int PREVIOUS_BEST_MOVE_SCORE = 1000;
 
+    // Safety buffer to account for communication latency between the engine and the online platform
+    public static final int MOVE_OVERHEAD = 50;
+
     // Search function parameters, tuned with SPSA
     public static final int[] PROMOTION_SCORES = {-45, -50, -50, 35};
     public static final int FIRST_KILLER_MOVE_SCORE = 2;
     public static final int SECOND_KILLER_MOVE_SCORE = 1;
     public static final int SAFETY_MARGIN = 400;
     public static final int LATE_ENDGAME_PHASE_THRESHOLD = 0;
+    public static final int ESTIMATED_MOVES_REMAINING = 35;
+    public static final int INCREMENT_USAGE_PERCENT = 75;
+    public static final int SOFT_TIME_LIMIT_PERCENT = 50;
+    public static final int MAX_SOFT_TIME_LIMIT_PERCENT = 50;
+    public static final int HARD_TIME_LIMIT_MULTIPLIER_PERCENT = 300;
+    public static final int MAX_HARD_TIME_LIMIT_PERCENT = 80;
 
     // These are evaluation function parameters, but because they are used to win quickly before the search depth runs out,
     // they are also tuned with SPSA

@@ -14,18 +14,20 @@ public final class ApplicationConfig {
 
     // Configures the versions of the engine when it's a human vs engine game and when it's an engine vs engine game
     public static final Chessbot RANDOM_BOT = new RandomBot();
-    public static final Chessbot PREVIOUS_VERSION_BOT = new PreviousVersionBot("v14.2 - Safety Margin = 500");
-    public static final Chessbot NEW_VERSION_BOT = new NewVersionBot("v15.1 - Killer Moves");
+    public static final Chessbot PREVIOUS_VERSION_BOT = new PreviousVersionBot("v16.2 - MAX_HARD_TIME_LIMIT_PERCENT = 80");
+    public static final Chessbot NEW_VERSION_BOT = new NewVersionBot("v16.3 - MAX_HARD_TIME_LIMIT_PERCENT = 85");
 
     public static final Chessbot HUMAN_OPPONENT_BOT = NEW_VERSION_BOT;
     public static final Chessbot ENGINE_MATCH_WHITE_BOT = NEW_VERSION_BOT;
     public static final Chessbot ENGINE_MATCH_BLACK_BOT = PREVIOUS_VERSION_BOT;
 
-    // The search depth that the different engine versions target. The search can exceed this number
-    public static final int AI_TARGET_SEARCH_DEPTH = 6;
+    public static final int WHITE_INITIAL_TIME_MS = 5000;
+    public static final int WHITE_INCREMENT_TIME_MS = 0;
+    public static final int BLACK_INITIAL_TIME_MS = 5000;
+    public static final int BLACK_INCREMENT_TIME_MS = 0;
 
     // Transposition table size. Bigger size equals faster speeds but also bigger memory requirements. Put 1 << 20 for instant
-    // games, 1 << 22 for bullet, 1 << 24 for blitz, 1 << 25 for rapid and 1 << 26 for maximum analysis
+    // games, 1 << 22 for bullet, 1 << 24 for blitz, 1 << 25 for rapid and 1 << 26 for classical
     public static final int TT_SIZE = 1 << 22;
 
     // Jeroen.bin = Standard, Daring.bin = Risky

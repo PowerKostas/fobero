@@ -8,7 +8,7 @@ public interface Chessbot {
     String name();
 
     // Returns the chosen engine move
-    int chooseMove(Board board);
+    int chooseMove(Board board, int timeLeft, int increment);
 
     // Coordinates every bot related job before starting a new game
     default void prepareNewGame() {}

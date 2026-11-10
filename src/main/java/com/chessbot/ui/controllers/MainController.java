@@ -1,18 +1,19 @@
 package com.chessbot.ui.controllers;
 
 import com.chessbot.application.ApplicationConfig;
-import com.chessbot.application.UIGameManager;
 import com.chessbot.application.PlayerType;
+import com.chessbot.application.UIGameManager;
 import com.chessbot.engine.core.Board;
 import com.chessbot.engine.core.Piece;
+import com.chessbot.ui.components.Sidebar;
 import com.chessbot.ui.components.VisualBoard;
 import com.chessbot.ui.input.MoveHandler;
 import javafx.fxml.FXML;
 import javafx.scene.layout.HBox;
 
-// This class runs after view.fxml is loaded from ChessApplication, it's responsible for setting up the game for the UI
+// This class runs after view.fxml is loaded from ChessApplication, it's responsible for initializing the UI components
+// and connecting them to the underlying game state
 public class MainController {
-    // Creates an HBox to display 2 visual boards if needed
     @FXML
     private HBox mainContainer;
 
@@ -24,9 +25,11 @@ public class MainController {
         int boardPerspective = (whitePlayerType != blackPlayerType && blackPlayerType == PlayerType.HUMAN) ? Piece.BLACK : Piece.WHITE;
 
         VisualBoard visualBoardOne = new VisualBoard(boardPerspective, false, ApplicationConfig.UI_GAME_FEN);
-        mainContainer.getChildren().addAll(visualBoardOne);
+        Sidebar sidebar = new Sidebar();
+        mainContainer.getChildren().addAll(visualBoardOne, sidebar);
+
         Board boardOne = visualBoardOne.getBoard();
-        UIGameManager uiGameManager = new UIGameManager(boardOne, visualBoardOne, true);
+        UIGameManager uiGameManager = new UIGameManager(boardOne, visualBoardOne, sidebar, true);
         MoveHandler moveHandler = new MoveHandler(visualBoardOne, uiGameManager);
         visualBoardOne.attachMoveHandler(moveHandler);
         uiGameManager.startGame(whitePlayerType, blackPlayerType);
