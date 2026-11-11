@@ -11,6 +11,9 @@ public final class Constants {
     // I went with about double of that
     public static final int MAX_GAME_MOVES = 1024;
 
+    // 256 is a safe limit because the highest number of possible legal moves in any position is 218
+    public static final int MAX_LEGAL_MOVES_PER_POSITION = 256;
+
     // Safe values that allow the search function operations to work without overflows
     public static final int INFINITY_SCORE = 10000000;
     public static final int CHECKMATE_EVALUATION = 1000000;
@@ -36,6 +39,9 @@ public final class Constants {
     public static final int MAX_SOFT_TIME_LIMIT_PERCENT = 50;
     public static final int HARD_TIME_LIMIT_MULTIPLIER_PERCENT = 300;
     public static final int MAX_HARD_TIME_LIMIT_PERCENT = 80;
+    public static final int LMR_MIN_DEPTH = 3; // Must be 3 or higher
+    public static final double LMR_BASE = 0.75;
+    public static final double LMR_DIVISOR = 2.25;
 
     // These are evaluation function parameters, but because they are used to win quickly before the search depth runs out,
     // they are also tuned with SPSA

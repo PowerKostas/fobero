@@ -47,6 +47,13 @@ public class UIGameManager {
     private boolean isGameOver;
     private long lastTickNanos;
 
+    // Class variables are used because time controls belong to the player, not the color, so they get swapped in restartGame()
+    // together with player types and bots
+    private long whiteInitialTime;
+    private int whiteIncrementTime;
+    private long blackInitialTime;
+    private int blackIncrementTime;
+
     // A class variable which is updated only when a move is actually played is needed because board.getTurn() can't be
     // used on the UI thread since it changes values millions of times per second
     private int currentTurn;
@@ -57,9 +64,13 @@ public class UIGameManager {
         this.visualBoard = visualBoard;
         this.sidebar = sidebar;
         this.isEndlessMode = isEndlessMode;
+        this.whiteInitialTime = ApplicationConfig.WHITE_INITIAL_TIME_MS;
+        this.whiteIncrementTime = ApplicationConfig.WHITE_INCREMENT_TIME_MS;
+        this.blackInitialTime = ApplicationConfig.BLACK_INITIAL_TIME_MS;
+        this.blackIncrementTime = ApplicationConfig.BLACK_INCREMENT_TIME_MS;
 
         boolean isEngineVsEngine = (ApplicationConfig.WHITE_PLAYER_TYPE == PlayerType.ENGINE &&
-                ApplicationConfig.BLACK_PLAYER_TYPE == PlayerType.ENGINE);
+                                    ApplicationConfig.BLACK_PLAYER_TYPE == PlayerType.ENGINE);
 
         // Assigns the according bot if white/black is an engine
         if (ApplicationConfig.WHITE_PLAYER_TYPE == PlayerType.ENGINE) {
@@ -85,8 +96,8 @@ public class UIGameManager {
     public void startGame(int whitePlayerType, int blackPlayerType) {
         this.whitePlayerType = whitePlayerType;
         this.blackPlayerType = blackPlayerType;
-        whiteTimeLeft = ApplicationConfig.WHITE_INITIAL_TIME_MS;
-        blackTimeLeft = ApplicationConfig.BLACK_INITIAL_TIME_MS;
+        whiteTimeLeft = whiteInitialTime;
+        blackTimeLeft = blackInitialTime;
         isGameOver = false;
         currentTurn = board.getTurn();
 
@@ -157,7 +168,7 @@ public class UIGameManager {
             Chessbot currentBot = (currentTurn == Piece.WHITE) ? whiteBot : blackBot;
 
             int currentTimeLeft = (int) ((currentTurn == Piece.WHITE) ? whiteTimeLeft : blackTimeLeft);
-            int currentIncrementTime = (currentTurn == Piece.WHITE) ? ApplicationConfig.WHITE_INCREMENT_TIME_MS : ApplicationConfig.BLACK_INCREMENT_TIME_MS;
+            int currentIncrementTime = (currentTurn == Piece.WHITE) ? whiteIncrementTime : blackIncrementTime;
 
             // Runs the search on a background thread in order for the window to not freeze when the engine is thinking
             Thread searchThread = new Thread(() -> {
@@ -165,9 +176,9 @@ public class UIGameManager {
                 int move = currentBot.chooseMove(board, currentTimeLeft, currentIncrementTime);
                 long elapsedMs = (System.nanoTime() - startTime) / 1_000_000L;
 
-                // Adds a delay of about 500ms before the move is played to make the engine moves seem natural. If a move
-                // is played in less than 500ms, pause the clock for the remainder of the delay, else just play the move
-                long remainingDelayMs = Math.max(0L, 500 - elapsedMs);
+                // Adds a delay of about 600ms before the move is played to make the engine moves seem natural. If a move
+                // is played in less than 600ms, pause the clock for the remainder of the delay, else just play the move
+                long remainingDelayMs = Math.max(0L, 600 - elapsedMs);
                 Platform.runLater(() -> {
                     // Discards the chosen move if the engine flagged while it was searching
                     if (isGameOver) {
@@ -208,11 +219,11 @@ public class UIGameManager {
     public void playMove(int legalMove) {
         // Adds the increment time to the player who is just about to play their move
         if (currentTurn == Piece.WHITE) {
-            whiteTimeLeft += ApplicationConfig.WHITE_INCREMENT_TIME_MS;
+            whiteTimeLeft += whiteIncrementTime;
         }
 
         else {
-            blackTimeLeft += ApplicationConfig.BLACK_INCREMENT_TIME_MS;
+            blackTimeLeft += blackIncrementTime;
         }
 
         board.makeMove(legalMove);
@@ -274,7 +285,7 @@ public class UIGameManager {
             blackBot.prepareNewGame();
         }
 
-        // Swaps colors within player types and within bots
+        // Swaps colors within player types, bots and time controls
         int tempPlayerType = whitePlayerType;
         whitePlayerType = blackPlayerType;
         blackPlayerType = tempPlayerType;
@@ -282,6 +293,14 @@ public class UIGameManager {
         Chessbot tempBot = whiteBot;
         whiteBot = blackBot;
         blackBot = tempBot;
+
+        long tempWhiteInitialTime = whiteInitialTime;
+        whiteInitialTime = blackInitialTime;
+        blackInitialTime = tempWhiteInitialTime;
+
+        int tempWhiteIncrementTime = whiteIncrementTime;
+        whiteIncrementTime = blackIncrementTime;
+        blackIncrementTime = tempWhiteIncrementTime;
 
         // Resets the engine board
         board = new Board();

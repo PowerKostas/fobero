@@ -1,14 +1,15 @@
 package com.chessbot.engine.movegen;
 
+import com.chessbot.engine.core.Constants;
 import com.chessbot.engine.core.Move;
 
 // A container of legal moves for a specific board state. A global array of legal moves would get overwritten at every new
 // node in a tree search. To avoid this and ensure zero object allocations, instances of MoveList are pre-allocated per
 // search depth (or held persistently by GameManager, MatchRunner, ...)
 public class MoveList {
-    // Holds the legal moves for the current object. 256 is a safe max limit (the highest number of possible legal moves
-    // in any position is 218). The Move ints hold info about the legal moves, more information in the Move class
-    public final int[] moves = new int[256];
+    // Holds the legal moves for the current object. The Move ints contain data about the moves, more information in the
+    // Move class
+    public final int[] moves = new int[Constants.MAX_LEGAL_MOVES_PER_POSITION];
 
     // Keeps track of how many legal moves are in the array
     public int count = 0;

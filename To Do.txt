@@ -1,12 +1,10 @@
 Search Function:
 
-- Timer
-
 - Add to Move Ordering: History Gravity with Maluses, Static Exchange Evaluation, Quiet Checks and Losing Captures
 
 - Aspiration Windows
 
-- Selectivity: Null Move Pruning, Late Move Reductions (Coding Adventure: Making a Better Chess Bot, Killers, Reductions and Repetitions), Singular Extensions, Futility Pruning, Reverse Futility Pruning, Razoring
+- Selectivity: Null Move Pruning, Singular Extensions, Futility Pruning, Reverse Futility Pruning, Razoring
 
 - Giving Checks in Quiescence Search
 

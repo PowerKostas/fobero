@@ -110,6 +110,15 @@ public class Searcher {
        to alpha as possible]) to get their bounds. If a search with a null window unexpectedly fails high, its exact evaluation
        is not known. If it's a PV-Node, the move is re-searched with a full window, otherwise, a re-search is not needed
        because the evaluation is already high enough to cause a beta-cutoff
+
+    7. Late Move Reductions: Saves time by reducing the search depth of moves that are ordered closer to the end, assuming
+       good move ordering. The first few depths are searched fully, the rest are searched at an increasingly reduced number
+       of plies. The moves are only re-searched if the reduced search fails high. LMR works alongside PVS, so the on fail
+       re-search flow is: LMR Reduced Depth Null Window Search -> PVS Full Depth Null Window Search -> PVS Full Depth Full
+       Window Search. It was tested that the engine performs better when it does not reduce moves if they are captures,
+       promotions or killer moves or if the side to move is in check. Instead of not reducing moves in the above conditions,
+       heuristic ways to reduce less were tested, but the results were negative. Also negative were the results of not reducing
+       the first few moves
     */
 
     // Entry function for the Searcher class. Called once per turn, responsible for searching the root and returning the
@@ -138,6 +147,9 @@ public class Searcher {
 
         long zobristKey = board.getCurrentZobristKey();
         int bestMove = moveList.moves[0];
+
+        // Only used for printing the evaluation at the end of a search
+        // int finalEvaluation = 0;
 
         for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth += 1) {
             MoveOrderer.prepareMoveScores(board, moveList, Move.getMoveWithoutScore(bestMove), null, 0);
@@ -189,6 +201,8 @@ public class Searcher {
             // String pvString = buildPrincipalVariationString(currentDepth);
             // System.out.printf("Current Depth: %d | Evaluation: %d | Principal Variation: %s%n%n", currentDepth, bestEvaluation, pvString);
 
+            // finalEvaluation = bestEvaluation;
+
             // If a checkmate is found, search() returns -Constants.CHECKMATE_EVALUATION + pliesFromRoot. From the root's
             // perspective, the number of plies to mate can be extracted with Constants.CHECKMATE_EVALUATION - Math.abs(bestEvaluation).
             // If it has already searched deep enough to prove no shorter mate exists, stop the search
@@ -203,6 +217,8 @@ public class Searcher {
         }
 
         // System.out.printf("Nodes Searched: %d%n", nodesSearched);
+
+        // System.out.printf("Evaluation: %d%n%n", finalEvaluation);
 
         return bestMove;
     }
@@ -242,11 +258,12 @@ public class Searcher {
         MoveList moveList = moveListPool[pliesFromRoot];
         MoveGenerator.generate(board, moveList);
 
+        boolean inCheck = Checks.calculateSquares(board, board.getTurn()) != 0L;
+
         // If this move results in checkmate, return a terrible evaluation. The terrible evaluation is adjusted by the plies
         // from root number, this ensures that the engine favors the current player getting mated in 5 over getting mated
         // in 1. If this move results in stalemate, return an evaluation of 0
         if (moveList.count == 0) {
-            boolean inCheck = Checks.calculateSquares(board, board.getTurn()) != 0L;
             return inCheck ? -Constants.CHECKMATE_EVALUATION + pliesFromRoot : 0;
         }
 
@@ -260,13 +277,25 @@ public class Searcher {
             int move = moveList.moves[i];
             int undo = board.makeMove(move);
 
-            int evaluation;
+            int evaluation = 0;
             if (i == 0) {
                 evaluation = -search(depth - 1, pliesFromRoot + 1, -beta, -alpha);
             }
 
             else {
-                evaluation = -search(depth - 1, pliesFromRoot + 1, -alpha - 1, -alpha);
+                boolean searchFullDepth = true;
+                boolean lmrConditions = depth >= Constants.LMR_MIN_DEPTH && Move.getFlag(move) < Move.FLAG_CAPTURE &&
+                                        !killerMoves.isKillerMove(Move.getMoveWithoutScore(move), pliesFromRoot) && !inCheck;
+
+                if (lmrConditions) {
+                    int reducedDepth = LateMoveReductions.calculateReducedDepth(depth, i);
+                    evaluation = -search(reducedDepth, pliesFromRoot + 1, -alpha - 1, -alpha);
+                    searchFullDepth = (evaluation > alpha);
+                }
+
+                if (searchFullDepth && !isHardTimeLimitExpired) {
+                    evaluation = -search(depth - 1, pliesFromRoot + 1, -alpha - 1, -alpha);
+                }
 
                 if (evaluation > alpha && evaluation < beta && !isHardTimeLimitExpired) {
                     evaluation = -search(depth - 1, pliesFromRoot + 1, -beta, -alpha);
@@ -396,9 +425,9 @@ public class Searcher {
                 int flag = Move.getFlag(move);
 
                 if (flag == Move.FLAG_CAPTURE ||
-                    flag == Move.FLAG_EN_PASSANT_CAPTURE ||
-                    flag == Move.FLAG_QUEEN_PROMOTION ||
-                    flag == Move.FLAG_QUEEN_PROMOTION_CAPTURE)
+                        flag == Move.FLAG_EN_PASSANT_CAPTURE ||
+                        flag == Move.FLAG_QUEEN_PROMOTION ||
+                        flag == Move.FLAG_QUEEN_PROMOTION_CAPTURE)
                 {
                     moveList.moves[tacticalMovesCount] = move;
                     tacticalMovesCount += 1;

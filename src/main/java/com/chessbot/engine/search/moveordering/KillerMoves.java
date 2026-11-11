@@ -36,4 +36,9 @@ public class KillerMoves {
 
         return 0;
     }
+
+
+    public boolean isKillerMove(int move, int pliesFromRoot) {
+        return move == firstKillerMoves[pliesFromRoot] || move == secondKillerMoves[pliesFromRoot];
+    }
 }
