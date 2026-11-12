@@ -30,7 +30,7 @@ public final class MatchRunner {
         int game = 0;
         while (sprt.getStatus().equals("CONTINUE")) {
             Board board = new Board();
-            board.loadInitialPosition(ApplicationConfig.MATCH_RUNNER_FEN);
+            board.loadPosition(ApplicationConfig.MATCH_RUNNER_FEN);
             previousVersionBot.prepareNewGame();
             newVersionBot.prepareNewGame();
 
@@ -72,7 +72,7 @@ public final class MatchRunner {
                 int currentIncrementTime = isWhite ? whiteIncrementTime : blackIncrementTime;
 
                 long turnStartTime = System.nanoTime();
-                int move = activeBot.chooseMove(board, currentTimeLeft, currentIncrementTime);
+                int move = activeBot.chooseMove(board, currentTimeLeft, currentIncrementTime, -1);
                 int turnElapsedMs = (int) ((System.nanoTime() - turnStartTime) / 1_000_000L);
 
                 if (isWhite) {

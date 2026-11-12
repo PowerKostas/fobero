@@ -138,8 +138,30 @@ public class Board {
     public int getPhase() { return phase; }
 
 
-    // Uses the precomputed longs to calculate the Zobrist hash key that represents the initial position
-    public void calculateInitialZobristKey() {
+    public void calculateInitialScores() {
+        // Resets the scores in case this function is called multiple times in a game, done in TexelTuner for example
+        currentMgTotalScore = 0;
+        currentEgTotalScore = 0;
+        phase = 0;
+
+        long allPiecesBitboard = otherBitboards[2];
+        while (allPiecesBitboard != 0L) {
+            int square = Long.numberOfTrailingZeros(allPiecesBitboard);
+            allPiecesBitboard &= allPiecesBitboard - 1;
+
+            int pieceColor = getPieceColorAtSquare(square);
+            int pieceType = getPieceTypeAtSquare(square);
+            int sign = 1 - 2 * pieceColor; // 1 for white, -1 for black
+
+            currentMgTotalScore += sign * PieceSquareTables.getMgScore(pieceColor, pieceType, square);
+            currentEgTotalScore += sign * PieceSquareTables.getEgScore(pieceColor, pieceType, square);
+            phase += Constants.getEvalParam(PHASE_WEIGHTS_START_INDEX + pieceType);
+        }
+    }
+
+
+    // Uses the precomputed longs to calculate the Zobrist hash key that represents the loaded position
+    public void calculateZobristKey() {
         currentZobristKey = 0L;
 
         for (int piece = 0; piece < 12; piece += 1) {
@@ -164,32 +186,18 @@ public class Board {
     }
 
 
-    public void calculateInitialScores() {
-        // Resetting the scores in case this function is called multiple times in a game, done in TexelTuner for example
+    // Coordinates every needed job at the start of the game
+    public void loadPosition(String fen) {
+        Arrays.fill(bitboards, 0L);
+        Arrays.fill(otherBitboards, 0L);
+        Arrays.fill(mailbox, -1);
+        plyIndex = 0;
         currentMgTotalScore = 0;
         currentEgTotalScore = 0;
         phase = 0;
 
-        long allPiecesBitboard = otherBitboards[2];
-        while (allPiecesBitboard != 0L) {
-            int square = Long.numberOfTrailingZeros(allPiecesBitboard);
-            allPiecesBitboard &= allPiecesBitboard - 1;
-
-            int pieceColor = getPieceColorAtSquare(square);
-            int pieceType = getPieceTypeAtSquare(square);
-            int sign = 1 - 2 * pieceColor; // 1 for white, -1 for black
-
-            currentMgTotalScore += sign * PieceSquareTables.getMgScore(pieceColor, pieceType, square);
-            currentEgTotalScore += sign * PieceSquareTables.getEgScore(pieceColor, pieceType, square);
-            phase += Constants.getEvalParam(PHASE_WEIGHTS_START_INDEX + pieceType);
-        }
-    }
-
-
-    // Coordinates every job at the start of the game
-    public void loadInitialPosition(String fen) {
         FenParser.loadFen(fen, this);
-        calculateInitialZobristKey();
+        calculateZobristKey();
     }
 
 

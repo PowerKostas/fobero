@@ -133,7 +133,7 @@ public final class OpeningBook {
     // Gets all the candidate moves and weights for this position and returns a weighted-random opening book move. Return
     // -1 if the position isn't in the book. This function can be executed once at the start of every turn with no problem
     // because it's very fast
-    public synchronized int getMove(Board board) {
+    public int getMove(Board board) {
         long targetZobristKey = board.getCurrentZobristKey();
         int firstMatchingIndex = findFirstMatchingIndex(ZOBRIST_KEYS, targetZobristKey);
 

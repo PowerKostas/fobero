@@ -58,7 +58,7 @@ public final class TexelTuner {
                 }
 
                 Board board = new Board(0);
-                board.loadInitialPosition(fen);
+                board.loadPosition(fen);
                 tempBoards.add(board);
                 tempResults.add(result);
             });

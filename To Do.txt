@@ -26,6 +26,6 @@ Other:
 
 - SPSA
 
-- Lazy SMP
+- Pondering
 
-- UCI (Coding Adventure: Making a Better Chess Bot, Creating a Lichess Bot)
+- Lazy SMP

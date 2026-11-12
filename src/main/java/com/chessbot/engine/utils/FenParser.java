@@ -25,8 +25,8 @@ public final class FenParser {
     // Reads a FEN sequence and updates the bitboards. The sixth part of a FEN string, the fullmove number, isn't included
     // in the calculations because it's not needed anywhere in the engine
     public static void loadFen(String fen, Board board) {
-        // Splits the fen string for every whitespace in it
-        String[] parts = fen.split("\\s+");
+        // Splits the fen string on every whitespace in it
+        String[] parts = fen.split("\\s");
 
         int col = 0;
         int row = 7;
@@ -64,8 +64,7 @@ public final class FenParser {
             return;
         }
 
-        // Third part of the FEN string dictates what castling rights remain, if the string doesn't include that information,
-        // all castling rights are available
+        // Third part of the FEN string dictates what castling rights remain
         if (parts.length > 2) {
             String castlingRightsString = parts[2];
             int castlingRights = 0;
@@ -103,8 +102,11 @@ public final class FenParser {
             }
         }
 
-        // Fifth part of the FEN string indicates the number of plies made, if the string doesn't include that information,
-        // the number is set to 0
+        else {
+            board.setEnPassantSquareBitboard(0L);
+        }
+
+        // Fifth part of the FEN string indicates the half move clock
         if (parts.length > 4) {
             board.setHalfMoveClock(Integer.parseInt(parts[4]));
         }

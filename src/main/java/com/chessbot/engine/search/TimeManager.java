@@ -9,7 +9,12 @@ public final class TimeManager {
 
     // The soft time limit is checked at the end of each Iterative Deepening depth, if it's surpassed, the search stops
     // and the incomplete data is discarded
-    public static long calculateSoftTimeLimit(int timeLeft, int incrementTime) {
+    public static long calculateSoftTimeLimit(int timeLeft, int incrementTime, int moveTime) {
+        // If a fixed movetime was provided, bypass standard time management
+        if (moveTime != -1) {
+            return Math.max(1, moveTime - Constants.MOVE_OVERHEAD);
+        }
+
         int usableTime = Math.max(1, timeLeft - Constants.MOVE_OVERHEAD);
 
         // Calculates the base time to allocate on this move by assuming a constant number of moves remaining in the game
@@ -32,7 +37,12 @@ public final class TimeManager {
 
     // The hard time limit is checked inside the search every 2048 nodes, if a single depth explodes in width, the search
     // stops and the incomplete data is discarded
-    public static long calculateHardTimeLimit(long timeLeft, long softTimeLimit) {
+    public static long calculateHardTimeLimit(long timeLeft, long softTimeLimit, int moveTime) {
+        // Same job as in calculateSoftTimeLimit
+        if (moveTime != -1) {
+            return softTimeLimit;
+        }
+
         long usableTime = Math.max(1, timeLeft - Constants.MOVE_OVERHEAD);
 
         // The hard time limit is x times bigger than the soft time limit

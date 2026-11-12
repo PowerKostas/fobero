@@ -173,7 +173,7 @@ public class UIGameManager {
             // Runs the search on a background thread in order for the window to not freeze when the engine is thinking
             Thread searchThread = new Thread(() -> {
                 long startTime = System.nanoTime();
-                int move = currentBot.chooseMove(board, currentTimeLeft, currentIncrementTime);
+                int move = currentBot.chooseMove(board, currentTimeLeft, currentIncrementTime, -1);
                 long elapsedMs = (System.nanoTime() - startTime) / 1_000_000L;
 
                 // Adds a delay of about 600ms before the move is played to make the engine moves seem natural. If a move
@@ -304,7 +304,7 @@ public class UIGameManager {
 
         // Resets the engine board
         board = new Board();
-        board.loadInitialPosition(ApplicationConfig.ENDLESS_MODE_FEN);
+        board.loadPosition(ApplicationConfig.ENDLESS_MODE_FEN);
 
         // Resets the visual board
         visualBoard.setDisable(false);

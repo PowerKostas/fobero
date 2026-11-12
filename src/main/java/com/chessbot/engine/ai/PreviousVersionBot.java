@@ -19,14 +19,14 @@ public final class PreviousVersionBot implements Chessbot {
     public String name() { return name; }
 
     @Override
-    public int chooseMove(Board board, int timeLeft, int incrementTime) {
+    public int chooseMove(Board board, int timeLeft, int incrementTime, int moveTime) {
         int bookMove = openingBook.getMove(board);
         if (bookMove != -1) {
             return bookMove;
         }
 
         Searcher searcher = new Searcher(board, tt, false);
-        return searcher.searchRoot(Constants.MAX_SEARCH_DEPTH, timeLeft, incrementTime);
+        return searcher.searchRoot(Constants.MAX_SEARCH_DEPTH, timeLeft, incrementTime, moveTime);
     }
 
     @Override

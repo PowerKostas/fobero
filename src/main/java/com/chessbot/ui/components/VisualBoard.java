@@ -70,7 +70,7 @@ public class VisualBoard extends StackPane {
         this.getChildren().add(boardGrid);
 
         // Loads the initial position on the engine board and on the visual board
-        board.loadInitialPosition(fen);
+        board.loadPosition(fen);
         sync(null); // Passing null because legal moves haven't been generated yet
 
         // Listens for clicks inside the board, on a left click, reset the right-clicked squares
@@ -257,7 +257,7 @@ public class VisualBoard extends StackPane {
         }
 
         // If this is a debug board, create a legal moves bitboard to visualize
-        if (this.isDebugBoard) {
+        if (this.isDebugBoard && moveList != null) {
             long legalMovesBitboard = 0L;
 
             for (int i = 0; i < moveList.count; i += 1) {

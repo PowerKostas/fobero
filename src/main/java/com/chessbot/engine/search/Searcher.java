@@ -34,6 +34,10 @@ public class Searcher {
 
     private long hardTimeLimitEndTime;
 
+    // The stop can be sent via UCI. It's volatile to guarantee that any thread reading the variable will always see the
+    // most recently written value
+    public static volatile boolean stopRequested;
+
 
     public Searcher(Board board, TranspositionTable tt, boolean experimentalVersion) {
         this.board = board;
@@ -126,7 +130,7 @@ public class Searcher {
     // moves in this position, moveList.moves[0] would return a null, if it's the first move of the game, or a random illegal
     // move, anywhere else. But this isn't a problem because the end of the game is already handled by whichever class originally
     // called this function
-    public int searchRoot(int maxDepth, int timeLeft, int incrementTime) {
+    public int searchRoot(int maxDepth, int timeLeft, int incrementTime, int moveTime) {
         MoveList moveList = moveListPool[0];
         MoveGenerator.generate(board, moveList);
 
@@ -137,9 +141,10 @@ public class Searcher {
 
         nodesSearched = 1;
         isHardTimeLimitExpired = false;
+        stopRequested = false;
 
-        long softTimeLimit = TimeManager.calculateSoftTimeLimit(timeLeft, incrementTime);
-        long hardTimeLimit = TimeManager.calculateHardTimeLimit(timeLeft, softTimeLimit);
+        long softTimeLimit = TimeManager.calculateSoftTimeLimit(timeLeft, incrementTime, moveTime);
+        long hardTimeLimit = TimeManager.calculateHardTimeLimit(timeLeft, softTimeLimit, moveTime);
 
         long startTime = System.nanoTime();
         long softEndTime = startTime + (softTimeLimit * 1_000_000L);
@@ -227,7 +232,7 @@ public class Searcher {
     private int search(int depth, int pliesFromRoot, int alpha, int beta) {
         nodesSearched += 1;
 
-        if ((nodesSearched & 2047) == 0 && System.nanoTime() >= hardTimeLimitEndTime) {
+        if ((nodesSearched & 2047) == 0 && (System.nanoTime() >= hardTimeLimitEndTime || stopRequested)) {
             isHardTimeLimitExpired = true;
             return 0;
         }
@@ -340,7 +345,7 @@ public class Searcher {
     private int quiescenceSearch(int pliesFromRoot, int alpha, int beta) {
         nodesSearched += 1;
 
-        if ((nodesSearched & 2047) == 0 && System.nanoTime() >= hardTimeLimitEndTime) {
+        if ((nodesSearched & 2047) == 0 && (System.nanoTime() >= hardTimeLimitEndTime || stopRequested)) {
             isHardTimeLimitExpired = true;
             return 0;
         }

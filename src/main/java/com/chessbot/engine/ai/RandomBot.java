@@ -16,7 +16,7 @@ public final class RandomBot implements Chessbot {
     }
 
     @Override
-    public int chooseMove(Board board, int timeLeft, int incrementTime) {
+    public int chooseMove(Board board, int timeLeft, int incrementTime, int moveTime) {
         MoveGenerator.generate(board, moveList);
         return moveList.moves[random.nextInt(moveList.count)];
     }
