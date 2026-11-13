@@ -25,7 +25,7 @@ public final class Constants {
     public static final int PREVIOUS_BEST_MOVE_SCORE = 1000;
 
     // Safety buffer to account for communication latency between the engine and the online platform
-    public static final int MOVE_OVERHEAD = 50;
+    public static final int MOVE_OVERHEAD = 100;
 
     // Search function parameters, tuned with SPSA
     public static final int[] PROMOTION_SCORES = {-45, -50, -50, 35};

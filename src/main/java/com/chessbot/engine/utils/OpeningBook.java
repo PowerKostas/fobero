@@ -1,6 +1,5 @@
 package com.chessbot.engine.utils;
 
-import com.chessbot.application.ChessbotApplication;
 import com.chessbot.engine.core.Board;
 import com.chessbot.engine.core.Move;
 import com.chessbot.engine.core.Piece;
@@ -29,7 +28,7 @@ public final class OpeningBook {
 
     // The opening book is stored in bytes, each entry has 16 bytes (128 bits) and big-endian is used
     public OpeningBook(String name) {
-        try (InputStream stream = ChessbotApplication.class.getResourceAsStream("/com/chessbot/datasets/" + name)) {
+        try (InputStream stream = OpeningBook.class.getResourceAsStream("/com/chessbot/datasets/" + name)) {
             if (stream == null) {
                 throw new IllegalArgumentException();
             }
